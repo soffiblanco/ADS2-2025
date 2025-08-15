@@ -1,0 +1,35 @@
+services:
+  db:
+    image: oracle-xe-custom:latest
+    container_name: oracle-xe
+    ports: ["1521:1521", "5500:5500"]
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "echo 'select 1 from dual;' | sqlplus -s / as sysdba"]
+      interval: 15s
+      timeout: 5s
+      retries: 40
+
+  api:
+    build:
+      context: /home/soffiblanco/proyecto-docker/backend
+      dockerfile: Dockerfile
+    container_name: api
+    environment:
+      DB_URL: jdbc:oracle:thin:@//db:1521/XEPDB1
+      DB_USER: C##PROYECTO
+      DB_PASS: Unis
+      PORT: 8080
+    depends_on:
+      db:
+        condition: service_healthy
+    ports: ["8080:8080"]
+
+  web:
+    build:
+      context: /home/soffiblanco/proyecto-docker/frontend
+      dockerfile: Dockerfile
+    container_name: web
+    depends_on:
+      - api
+    ports: ["8081:80"]
+
